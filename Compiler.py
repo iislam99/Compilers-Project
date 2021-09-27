@@ -150,6 +150,9 @@ class SyntaxAnalyzer:
         self.index = 0
         self.prev_i = -1
         self.print_rules = True
+        self.symbol_table = []
+        self.memory_address = 5000
+        self.datatype = ""
 
         do = True
         while do:
@@ -174,8 +177,14 @@ class SyntaxAnalyzer:
         return True
 
     def printInfo(self, record):
-        #if self.print_rules:
-        print("\nToken:", record[self.index][0], "\tLexeme:", record[self.index][1])
+        if self.print_rules:
+            print("\nToken:", record[self.index][0], "\tLexeme:", record[self.index][1])
+
+    def printSymbolTable(self):
+        print("{: <20} {: <20} {: <20}".format(*["IDENTIFIER", "MEMORY LOCATION", "TYPE"]))
+        print()
+        for item in self.symbol_table:
+            print("{: <20} {: <20} {: <20}".format(*item))
 
     # Statement
     def S(self, record):
@@ -550,9 +559,13 @@ class SyntaxAnalyzer:
             print("\t<Declarative> --> <Type> <Identifier> <More IDs> ;")
 
         if self.TYPE(record):
+            self.datatype = record[self.index][1]
             if not self.forward(record):
                 return False
             if self.ID(record[self.index][0]):
+                self.symbol_table.append([record[self.index][1], self.memory_address, self.datatype])
+                self.memory_address += 1
+
                 if not self.forward(record):
                     return False
                 if self.M_IDs(record):
@@ -585,6 +598,9 @@ class SyntaxAnalyzer:
             if not self.forward(record):
                 return False
             if self.ID(record[self.index][0]):
+                self.symbol_table.append([record[self.index][1], self.memory_address, self.datatype])
+                self.memory_address += 1
+
                 if not self.forward(record):
                     return False
                 if self.M_IDs(record):
@@ -628,7 +644,11 @@ def printTokens(token_list):
     for token in token_list:
         print("{: <20} {: <20} {: <20}".format(*token))
 
-    print("\nTotal:", len(token_list))
+    #print("\nTotal:", len(token_list))
+    print()
+    print('-'*100)
+    print()
+
 
 def analyzeFile():
     file_name = input("Input the name of the file you want to open: ")
@@ -651,13 +671,16 @@ def analyzeFile():
         if line_tokens == -1:
             return
         token_list += line_tokens
-    file.close()
 
+    file.close()
     #printTokens(token_list)
-    #print()
-    #print('-'*100)
 
     # Syntax Analysis
-    SyntaxAnalyzer(token_list)
+    stx = SyntaxAnalyzer(token_list)
+    print('-'*100)
+    print()
+
+    # Symbol Table
+    stx.printSymbolTable()
 
 analyzeFile()
